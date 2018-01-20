@@ -1,12 +1,10 @@
 import binascii
+from collections import defaultdict
 
-from cxc_toolkit.hodgepodge import (xor,
-                                    hex_to_ascii_string,
-                                    is_word,
-                                    )
+from cxc_toolkit.hodgepodge import xor_bytes
 
 
-ciphertexts = [
+ciphertexts_hex = [
     "315c4eeaa8b5f8aaf9174145bf43e1784b8fa00dc71d885a804e5ee9fa40b16349c146fb778cdf2d3aff021dfff5b403b510d0d0455468aeb98622b137dae857553ccd8883a7bc37520e06e515d22c954eba5025b8cc57ee59418ce7dc6bc41556bdb36bbca3e8774301fbcaa3b83b220809560987815f65286764703de0f3d524400a19b159610b11ef3e",
     "234c02ecbbfbafa3ed18510abd11fa724fcda2018a1a8342cf064bbde548b12b07df44ba7191d9606ef4081ffde5ad46a5069d9f7f543bedb9c861bf29c7e205132eda9382b0bc2c5c4b45f919cf3a9f1cb74151f6d551f4480c82b2cb24cc5b028aa76eb7b4ab24171ab3cdadb8356f",
     "32510ba9a7b2bba9b8005d43a304b5714cc0bb0c8a34884dd91304b8ad40b62b07df44ba6e9d8a2368e51d04e0e7b207b70b9b8261112bacb6c866a232dfe257527dc29398f5f3251a0d47e503c66e935de81230b59b7afb5f41afa8d661cb",
@@ -20,19 +18,30 @@ ciphertexts = [
     "32510ba9babebbbefd001547a810e67149caee11d945cd7fc81a05e9f85aac650e9052ba6a8cd8257bf14d13e6f0a803b54fde9e77472dbff89d71b57bddef121336cb85ccb8f3315f4b52e301d16e9f52f904",
 ]
 
-ciphertexts_bytes = list(map(binascii.unhexlify, ciphertexts))
 
-ciphertexts_bytes_sorted = sorted(ciphertexts_bytes, key=len)
-origin_length = len(ciphertexts_bytes_sorted[-3])
+ciphertexts = list(map(binascii.unhexlify, ciphertexts_hex))
 
-for i, ciphertext_bytes in enumerate(ciphertexts_bytes):
-    filter_length = min(len(ciphertext_bytes), origin_length)
-    is_space = [True] * filter_length
-    for j, another_ciphertext_bytes in enumerate(ciphertexts_bytes):
-        if i != j:  # make sure not the same ciphertext
-            xor_ciphertext_hex = xor(ciphertexts[i], ciphertexts[j])
-            xor_ciphertext = binascii.unhexlify(xor_ciphertext_hex)
-            for k, character in enumerate(xor_ciphertext):
-                if k < filter_length and not is_word(character):
-                    is_space[k] = False
-    print(list(map(int, is_space)))
+words = b'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM .,:'
+words_str = words.decode("ascii")
+
+for target_cipher in ciphertexts:
+    guesses = ''
+
+    # Derive each character in last character in turn
+    for i, character in enumerate(target_cipher):
+        results = defaultdict(int)
+        # Assume each letter in turn
+        for word in words:
+            for ciphertext in ciphertexts:
+                if ciphertext != target_cipher and i < len(ciphertext):
+                    xor = character ^ ciphertext[i] ^ word
+                    if chr(xor) in words_str:
+                        results[chr(word)] += 1
+        if results:
+            # print(sorted(results.items(), key=lambda x: x[1], reverse=True)[:8])
+            guess = max(results, key=results.get)
+            guesses += guess
+        else:
+            guesses += "0"
+
+    print(guesses)
