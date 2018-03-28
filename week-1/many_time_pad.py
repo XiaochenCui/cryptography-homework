@@ -1,5 +1,6 @@
 import binascii
 from collections import defaultdict
+import string
 
 
 ciphertexts_hex = [
@@ -21,7 +22,7 @@ ciphertexts_hex = [
 ciphertexts = list(map(binascii.unhexlify, ciphertexts_hex))
 
 # Get character range
-valid_character_range = (string.ascii_lowercase + ".,:!\"\'?").encode("ascii")
+valid_character_range = (string.ascii_letters + ".,:").encode("ascii")
 
 # Generate a table to store all possible messages
 # Init value of each cell is -1
@@ -58,11 +59,15 @@ for xored_index in range(10):
 
 
 def dict_to_list(d):
-    l = filter(lambda k: d[k]>=9, d)
-    r = list(l)
-    print(r)
+    l = list(filter(lambda k: d[k]>=9, d))
+    print(l)
+    r = l[0] if l else '0'
     return r
 
 
+def max_key(d):
+    return max(d, key=d.get)
+
+
 row = table
-print([dict_to_list(cell) if cell else '' for cell in row])
+print(''.join([max_key(cell) for cell in row]))
