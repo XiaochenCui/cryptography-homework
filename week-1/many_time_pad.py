@@ -24,20 +24,12 @@ ciphertexts = list(map(binascii.unhexlify, ciphertexts_hex))
 # Get character range
 valid_character_range = (string.ascii_letters + ".,: ").encode("ascii")
 
-# Generate a table to store all possible messages
-# Init value of each cell is -1
-# A cell will be a defaultdict with max size is len(valid_character_range)
-# Each cell will be guess for 10 * len(valid_character_range) times
-max_ciphertest_len = len(max(ciphertexts, key=lambda x: len(x)))
-
 # for target_cipher in ciphertexts:
 # for start_index, start_cipher in enumerate(ciphertexts):
-start_index = -1
-start_cipher = ciphertexts[start_index]
-table = [defaultdict(int) for _ in range(len(start_cipher))]
-for xored_index in range(10):
-    xored_cipher = ciphertexts[xored_index]
-    for character_index, character in enumerate(start_cipher):
+target_cipher = ciphertexts[-1]
+dic_list = [defaultdict(int) for _ in range(len(target_cipher))]
+for xored_cipher in ciphertexts[:10]:
+    for character_index, character in enumerate(target_cipher):
         if character_index < len(xored_cipher):
             xored_character = xored_cipher[character_index]
             # Assume each letter in turn
@@ -55,19 +47,7 @@ for xored_index in range(10):
                         m2 = chr(xor)
                         key = xored_character ^ xor
                         m1 = chr(character ^ key)
-                        table[character_index][m2] += 1
+                        dic_list[character_index][m2] += 1
 
 
-def dict_to_list(d):
-    l = list(filter(lambda k: d[k]>=9, d))
-    print(l)
-    r = l[0] if l else '0'
-    return r
-
-
-def max_key(d):
-    return max(d, key=d.get)
-
-
-row = table
-print(''.join([max_key(cell) for cell in row]))
+print(''.join([max(dic, key=dic.get) for dic in dic_list]))
