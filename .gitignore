@@ -1,3 +1,4 @@
-*.swp
+*.sw[po]
 
 cxc_toolkit
+.idea

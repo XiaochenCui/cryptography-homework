@@ -17,29 +17,52 @@ ciphertexts_hex = [
 ]
 
 
+# Transfer cipher to bytes
 ciphertexts = list(map(binascii.unhexlify, ciphertexts_hex))
 
-words = b'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM .,:'
-words_str = words.decode("ascii")
+# Get character range
+valid_character_range = (string.ascii_lowercase + ".,:!\"\'?").encode("ascii")
 
-for target_cipher in ciphertexts:
-    guesses = ''
+# Generate a table to store all possible messages
+# Init value of each cell is -1
+# A cell will be a defaultdict with max size is len(valid_character_range)
+# Each cell will be guess for 10 * len(valid_character_range) times
+max_ciphertest_len = len(max(ciphertexts, key=lambda x: len(x)))
 
-    # Derive each character in last character in turn
-    for i, character in enumerate(target_cipher):
-        results = defaultdict(int)
-        # Assume each letter in turn
-        for word in words:
-            for ciphertext in ciphertexts:
-                if ciphertext != target_cipher and i < len(ciphertext):
-                    xor = character ^ ciphertext[i] ^ word
-                    if chr(xor) in words_str:
-                        results[chr(word)] += 1
-        if results:
-            # print(sorted(results.items(), key=lambda x: x[1], reverse=True)[:8])
-            guess = max(results, key=results.get)
-            guesses += guess
-        else:
-            guesses += "0"
+# for target_cipher in ciphertexts:
+# for start_index, start_cipher in enumerate(ciphertexts):
+start_index = -1
+start_cipher = ciphertexts[start_index]
+table = [defaultdict(int) for _ in range(len(start_cipher))]
+for xored_index in range(10):
+    xored_cipher = ciphertexts[xored_index]
+    for character_index, character in enumerate(start_cipher):
+        if character_index < len(xored_cipher):
+            xored_character = xored_cipher[character_index]
+            # Assume each letter in turn
+            for word in valid_character_range:
+                if character_index < len(xored_cipher):
+                    # Derivation:
+                    # xor = key ^ m1 ^ key ^ m2 ^ word
+                    #     = m1 ^ m2 ^ word
+                    # If m1 == word:
+                    # then xor = m2 (xor is valid)
+                    # or m2 == word:
+                    # then xor = m1 (xor is valid)
+                    xor = character ^ xored_character ^ word
+                    if xor in valid_character_range:
+                        m2 = chr(xor)
+                        key = xored_character ^ xor
+                        m1 = chr(character ^ key)
+                        table[character_index][m2] += 1
 
-    print(guesses)
+
+def dict_to_list(d):
+    l = filter(lambda k: d[k]>=9, d)
+    r = list(l)
+    print(r)
+    return r
+
+
+row = table
+print([dict_to_list(cell) if cell else '' for cell in row])
