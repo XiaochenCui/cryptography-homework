@@ -22,7 +22,7 @@ ciphertexts_hex = [
 ciphertexts = list(map(binascii.unhexlify, ciphertexts_hex))
 
 # Get character range
-valid_character_range = (string.ascii_letters + ".,:").encode("ascii")
+valid_character_range = (string.ascii_letters + ".,: ").encode("ascii")
 
 # Generate a table to store all possible messages
 # Init value of each cell is -1
