@@ -50,4 +50,14 @@ for xored_cipher in ciphertexts[:10]:
                         dic_list[character_index][m2] += 1
 
 
-print(''.join([max(dic, key=dic.get) for dic in dic_list]))
+def dict_to_list(d):
+    return sorted(filter(lambda k: d[k] >= 8, d), key=d.get, reverse=True)
+
+
+table = list(map(dict_to_list, dic_list))
+
+for x in table:
+    print(x)
+
+for i in range(len(valid_character_range)):
+    print(''.join([table[j][i] if i < len(table[j]) else '' for j in range(len(table))]))
