@@ -2,3 +2,5 @@
 
 cxc_toolkit
 .idea
+
+*.pyc
